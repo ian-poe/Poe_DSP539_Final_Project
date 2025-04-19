@@ -195,3 +195,132 @@ summary(lm_2010)
 
 ```
 
+
+## Question 2:
+
+# Are we able to compare the data from 2010 to the data in 2010 or other years?
+
+To answer this question we want to ensure that the data is being sampled from the same areas, with the same distribution to the variables. 
+
+First The location will be viewed the code below shows the plotted locations for all of the surveyed locations. A map of the gulf is created and points in red of all surveyed locations are plotted. A desnity plot is generated over these points to see the areas of importance. 
+
+```{r}
+#Trawl Location over the entire Data set
+
+dwh_2 <- dwh %>% 
+  select(date_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch,depth,TOD,GEAR_SIZE,GEAR_TYPE,MESH_SIZE,tows,vessel_spd) %>%
+  mutate(date_gmt = mdy(date_gmt))
+
+trawl_loc = cbind(dwh_2$lon,dwh_2$lat)
+trawl_sp = SpatialPoints(trawl_loc)
+trawl_spdf = SpatialPointsDataFrame(trawl_loc,dwh_2)
+
+coords_df <- as.data.frame(trawl_spdf)
+
+xlim <- c(-98, -81)  # Longitude limits
+ylim <- c(18, 31)    # Latitude limits
+
+ggplot() +
+  borders("world", xlim = xlim, ylim = ylim, fill = "lightgray", colour = "black") +
+  borders("usa", colour = "black") +
+  borders("state", colour = "darkgray") +
+  geom_point(data = dwh_2, aes(x = lon, y = lat), color = "red", size = 1.5) + # Add points
+  stat_density2d(data = dwh_2, aes(x = lon, y = lat, fill = ..level..), geom = "polygon", alpha = 0.4) + # Density plot
+  scale_fill_viridis_c() +
+  labs(title = "Gulf of Mexico with Density Plot", x = "Longitude", y = "Latitude") +
+  coord_cartesian(xlim = xlim, ylim = ylim) +  # Restrict the view to the Gulf
+  theme_minimal()
+```
+
+Now we want to check the data from 2009 and 2010 in order to determine if these years the data is being sampled from simulate areas. If the data is not being sampled from the same areas then it will be hard to draw any conclusion for the data as sampling error and bais could affect the results of the data. A function was created to take the initial data set and plot any years specific coordinates on the map so it could be compared. An additional black dote was created to show where the oil spill had occurred. Comparing 2009 to 2010 we see that the 2010 data is grouped only in the northwest portion of the gulf while the 2009 data collected samples from the entire north (boardering the US) portion of the gulf. From these figures we should conclude that this data cannot be used to determine a difference in data for the 2010 data. 
+
+```{r}
+#Function for location in a year
+
+location_per_year = function(data,year){
+  data2= data %>% filter(year(date_gmt) == year)
+  
+  trawl_loc = cbind(data2$lon,data2$lat)
+  trawl_sp = SpatialPoints(trawl_loc)
+  trawl_spdf = SpatialPointsDataFrame(trawl_loc,data2)
+  coords_df <- as.data.frame(trawl_spdf)
+  
+  xlim <- c(-98, -81)  # Longitude limits
+  ylim <- c(18, 31)    # Latitude limits
+  
+  ggplot() +
+    borders("world", xlim = xlim, ylim = ylim, fill = "lightgray", colour = "black") +
+    borders("usa", colour = "black") +
+    borders("state", colour = "darkgray") +
+    geom_point(data = data2, aes(x = lon, y = lat), color = "red", size = 1.5) + # Add points
+    geom_point(aes(x = -88.37, y = 28.74), color = "black", size = 4) +
+    stat_density2d(data = data2, aes(x = lon, y = lat, fill = ..level..), geom = "polygon", alpha = 0.4) + # Density plot
+    scale_fill_viridis_c() +
+    labs(title = paste("Gulf of Mexico with Density Plot ", year), x = "Longitude", y = "Latitude") +
+    coord_cartesian(xlim = xlim, ylim = ylim) +  # Restrict the view to the Gulf
+    theme_minimal()
+}
+
+location_per_year(dwh_2,2009)
+location_per_year(dwh_2,2010)
+
+```
+
+Next the distribution of depth is checked from the data drom 2009 to 2010. A function was created which uses the initial data and two year inputes to compare the distribution of depth of the samples of the two years. In a ideal world these distributions should be the same or approximately the same. Plotting 2009 to 2010 we can see the 2009 data was sampled more from a 500-2000 ft depth while 2010 had a larger proportion from 2000 to 4000 ft.
+
+```{r}
+depth_per_year_density = function(data, year1, year2){
+
+  # Filter data for the selected years
+  data1 = data %>% filter(year(date_gmt) == year1)
+  data2 = data %>% filter(year(date_gmt) == year2)
+  
+  # Create the dataframe with correct lengths
+  df = data.frame(
+    values = as.numeric(c(data1$depth, data2$depth)),  # Ensure numeric values
+    group = factor(rep(c(year1, year2), c(length(data1$depth), length(data2$depth))))
+  )
+  
+  # Generate the density plot
+  ggplot(df, aes(x = values, fill = group, color = group)) +
+    geom_density(alpha = 0.5, linewidth = 1) +  # Smoothed density curves
+    scale_fill_manual(values = c("blue", "red")) +
+    scale_color_manual(values = c("blue", "red")) +  # Match density lines to fill colors
+    labs(title = paste("Comparison of Depth Distributions:", year1, "vs.", year2),
+         x = "Depth",
+         y = "Density") +
+    theme_minimal()
+}
+
+# Call the function
+depth_per_year_density(dwh_2, 2009, 2010)
+```
+
+A density plot of speed was then created in order to see how the distributions of speed differ from year to year. Again ideally these distributions will be similar. A function was created which uses the same imputes (data, year1, and year2). Comparing 2009 to 2010 we see the data from 2009 was more spread out with a peak of about 2.6. We see 2010 has very little variation with a large spike around 2.7 and very little spreat. 
+
+```{r}
+speed_per_year_density = function(data, year1, year2){
+
+  # Filter data for the selected years and add a year column
+  data1 = data %>% filter(year(date_gmt) == year1) %>% mutate(year = as.factor(year1))
+  data2 = data %>% filter(year(date_gmt) == year2) %>% mutate(year = as.factor(year2))
+  
+  # Combine datasets
+  df = bind_rows(data1, data2)
+  
+  # Generate density plot for vessel speed comparison
+  ggplot(df, aes(x = vessel_spd, fill = year, color = year)) +
+    geom_density(alpha = 0.5, linewidth = 1) +  # Smoothed density curves
+    scale_fill_manual(values = c("blue", "red")) +
+    scale_color_manual(values = c("blue", "red")) +  # Match density lines to fill colors
+    xlim(2, 4) +  # Adjusted range for better viewing
+    labs(title = paste("Vessel Speed Density Comparison:", year1, "vs.", year2),
+         x = "Speed",
+         y = "Density") +
+    theme_minimal()
+}
+
+# Call the function
+speed_per_year_density(dwh_2, 2009, 2010)
+```
+

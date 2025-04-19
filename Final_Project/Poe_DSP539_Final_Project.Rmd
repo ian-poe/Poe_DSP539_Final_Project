@@ -1,0 +1,197 @@
+---
+title: "Ground Fish Analysis around Deepwater Horizen Oil Spill"
+author: "Ian Poe"
+date: "2025-04-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(ggplot2)
+library(sf)
+library(mapdata)
+library(gridExtra)
+```
+
+## Baseline Data
+
+The baseline ground fish data can be found at https://catalog.data.gov/dataset/deepwater-horizon-baseline-dataset-ncei-accession-0150631 which provides data from 1987 to 2010. The data was collected from fisheries reasurch vessels which used twals where used to collect samples of the marine biology of the region. These samples where brought to the boat where there where sorted counted and recorded. The dataset contains 282 variavles with 13248 obserbations.
+
+```{r cars}
+dwh = read.csv("../Final_Project/DWH Baseline SEAMAP Groundfish.csv")
+dim(dwh)
+#colnames(dwh)
+```
+
+## Question 1: 
+
+# The Baseline Dataset contains data from before and after the oil spill. Can any significant conclusion be observered within this Dataset?
+
+
+Start by redefining The data set by the observations of interest (Not Including Specific Species Data). Additional Variables where related which where used in order to find the mean amount of fish sampled relative to how long was spent collecting the sample. An initial Plot of the overall trends for Finfish, Crustations, Other Species, and Total Species where plotted to have a baseline understand of the trends which are being seen.
+
+```{r}
+dwh_1 <- dwh %>% 
+  select(date_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch) %>%
+  mutate(date_gmt = mdy(date_gmt)) %>%  # Convert to Date early
+  group_by(date_gmt) %>% 
+  reframe(
+    Sum_min = sum(min_fish),
+    M_total_live = sum(tot_live) / Sum_min,
+    M_fin = sum(fin_catch) / Sum_min,
+    M_crus = sum(crus_catch) / Sum_min,
+    M_other = sum(othr_catch) / Sum_min,
+    Day = day(date_gmt),
+    Month = month(date_gmt),
+    Year = year(date_gmt)
+  )
+
+
+dwh_long <- dwh_1 %>%
+  pivot_longer(
+    cols = c(M_total_live, M_fin, M_crus, M_other), 
+    names_to = "Type",
+    values_to = "Value" 
+  )
+
+# ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +
+#   geom_line(size = 1) +  # Draw lines for each category
+#   labs(
+#     title = "Seasonal Comparison of Catch Types",
+#     x = "Date",
+#     y = "Mean Catch",
+#     color = "Catch Type"
+#   ) +
+#   theme_minimal() +
+#   scale_color_manual(values = c("M_total_live" = "blue", 
+#                                 "M_fin" = "red", 
+#                                 "M_crus" = "green", 
+#                                 "M_other" = "purple"))
+
+ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +
+  geom_line(size = 1) +  # Draw lines for each category
+  geom_smooth(method = "lm", se = FALSE, size = 1, color = "black") +
+  facet_wrap(~ Type, scales = "free_y") +  # Create a separate panel for each type
+  labs(
+    title = "Seasonal Comparison of Catch Types",
+    x = "Date",
+    y = "Mean Catch",
+    color = "Catch Type"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("M_total_live" = "blue", 
+                                "M_fin" = "red", 
+                                "M_crus" = "green", 
+                                "M_other" = "purple"))  # Custom colors for each category
+```
+
+
+The from the overall trends we see that a relatively level trend line is found however there is a apparent sinasoildal trend. As a result to minimize this effect the data was split into two distinct data sets was compare side by side. The data from 2009 (the year before the oil spill) was compared to 2010 (the year of the oil spill). This was done breaking the date down into the day of the year to have both data points plotted side by side. This Allows for additional seasonal trends to be seen. Due to missing Data in 2010 large sections of the data is missing. The 2010 data only contains a partion of the year after the oil spill had occured. To minimize this impart a bar graph is used to visualize the change in mean finfish, mean crustation, mean other, and mean total catch. From this figure slight differences between year can be seen but no certain conclusion can be drawn. 
+
+```{r}
+dwh_2010 <- dwh_1 %>%
+  filter(Year == 2010 ) %>%
+  rename(Date = date_gmt)
+
+dwh_2009 <- dwh_1 %>% 
+  filter(Year == 2009) %>% 
+  filter(Month == 6 | Month == 7 | Month ==8) %>%
+  rename(Date = date_gmt)
+
+make_series <- function(df, value_col, type_label, year_label) {
+  df %>%
+    select({{ value_col }}, Year, Month, Day) %>%
+    mutate(
+      DayOfYear = yday(make_date(Year, Month, Day)),
+      Value = {{ value_col }},
+      Type = type_label,
+      Year = year_label
+    ) %>%
+    select(DayOfYear, Value, Type, Year)
+}
+
+# Combine all lines
+all_lines <- bind_rows(
+  make_series(dwh_2009, M_fin, "Finfish", 2009),
+  make_series(dwh_2010, M_fin, "Finfish", 2010),
+  
+  make_series(dwh_2009, M_crus, "Crustaceans", 2009),
+  make_series(dwh_2010, M_crus, "Crustaceans", 2010),
+  
+  make_series(dwh_2009, M_other, "Other", 2009),
+  make_series(dwh_2010, M_other, "Other", 2010),
+  
+  make_series(dwh_2009, M_total_live, "Total", 2009),
+  make_series(dwh_2010, M_total_live, "Total", 2010)
+)
+
+
+library(ggplot2)
+
+# ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year), linetype = Type)) +
+#   geom_line(size = 1) +
+#   labs(
+#     title = "Seasonal Catch Comparison (2009 vs 2010)",
+#     x = "Day of Year",
+#     y = "Mean Catch",
+#     color = "Year",
+#     linetype = "Catch Type"
+#   ) +
+#   theme_minimal() +
+#   scale_color_manual(values = c("2009" = "blue", "2010" = "red"))
+# 
+# 
+# ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year))) +
+#   geom_line(size = 1) +
+#   facet_wrap(~ Type, scales = "free_y") +
+#   labs(
+#     title = "Seasonal Catch Comparison by Type (2009 vs 2010)",
+#     x = "Day of Year",
+#     y = "Mean Catch",
+#     color = "Year"
+#   ) +
+#   theme_minimal()
+
+ggplot(all_lines, aes(x = DayOfYear, y = Value, fill = as.factor(Year))) +
+  geom_col(position = "dodge") +
+  facet_wrap(~ Type, scales = "free_y") +
+  labs(
+    title = "Seasonal Catch Comparison by Type (2009 vs 2010)",
+    x = "Day of Year",
+    y = "Mean Catch",
+    fill = "Year"
+  ) +
+  theme_minimal()
+
+```
+
+
+In order to draw a more conclusive result two linear model was fitted to the data. The first linear model was a full model which include a verity of variable in order to determine significance. This model used total catch as a response with the longitude, latitude, minutes fished, depth, time of day, mesh size, tows, vessel speed, month, year, and is_2010 was variables. By adding a binary dummy variable for the 2010 data we can see if this data is significantly different that the other years. From this linear model a low r-squared was found which means the model does not fit the data very well. However, 8 of the explanatory variables where found to be significant. To ensure the variable is_2010 was not being influenced by and strong associations it other explanatory variables a second linear model was fitted using total catch as the responce variable and only is_2010 as the explanatory. This linear model also concluded significance of the year 2010. 
+
+```{r}
+#Statistical Test
+dwh_3 <- dwh %>% 
+  select(date_gmt, time_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch, depth, TOD, GEAR_SIZE, GEAR_TYPE, MESH_SIZE, tows, vessel_spd) %>%
+  mutate(
+    date_gmt = mdy(date_gmt),  # Convert to date format
+    day = day(date_gmt),       # Extract day
+    month = month(date_gmt),   # Extract month
+    year = year(date_gmt),     # Extract year
+    is_2010 = ifelse(year == 2010, 1, 0)  # Binary flag for 2010
+  )
+
+#Linear Model of M_total_live 
+
+#Binary Variable of 2010 Added to Check Significance
+lm_M_Total = lm(tot_live~lat+lon+min_fish+as.numeric(depth)+TOD+MESH_SIZE+tows+vessel_spd+month+year+is_2010, data = dwh_3)
+summary(lm_M_Total)
+
+lm_2010 = lm(tot_live ~ is_2010, data = dwh_3)
+summary(lm_2010)
+
+```
+

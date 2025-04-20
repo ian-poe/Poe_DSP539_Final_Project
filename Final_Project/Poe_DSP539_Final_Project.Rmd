@@ -370,7 +370,14 @@ Species_Greatest_Change <- function(data, ref_year, n) {
 }
 
 # Example usage
-Species_Greatest_Change(dwh, 2000, 5) 
+#Species_Greatest_Change(dwh, 2000, 5) 
+species = Species_Greatest_Change(dwh, 2000, 5) 
+species_increased <- sub("^N_", "", species$Top_Increasing$Species)  
+species_increased <- gsub("_", " ", species_increased)
+species_decreased <- sub("^N_", "", species$Top_Decreasing$Species)  
+species_decreased <- gsub("_", " ", species_decreased)
+print(species_increased)
+print(species_decreased)
 ```
 
 

@@ -324,4 +324,55 @@ speed_per_year_density = function(data, year1, year2){
 speed_per_year_density(dwh_2, 2009, 2010)
 ```
 
-Through the inconsistency in the maps of surveyed locations, differences in the density plots of both the depth and the speed the samples where collected the results from the linear regression should be viewed very skeptically as the sample from 2010 does a poor job at representing the true region being serveyed.  
+Through the inconsistency in the maps of surveyed locations, differences in the density plots of both the depth and the speed the samples where collected the results from the linear regression should be viewed very skeptically as the sample from 2010 does a poor job at representing the true region being surveyed.  
+
+## Using this dataset as a Baseline; Can We Identify at Risk Fish
+
+I want to create a function where I can view how a species population (mean_number_caught) changes from a respective data. For this project I want to identify the five species which increased and decreased the most. A reference year is used as a baseline for the starting position of the species. Below the Year 2000 is used. Then we want to compare the greatest change to the mean of the data from the last year. Above we found that 2010 should not be used as a good representation of the year of data as a result we are excluding this year and using 2009 as the end point for the data. The function requires the original data, a reference year, and the number of observations for both species increasing and decreasing. 
+
+```{r}
+Species_Greatest_Change <- function(data, ref_year, n) {
+  
+  data <- data %>%
+    filter(year >= ref_year & year != 2010) %>%
+    group_by(year) %>%
+    summarise(across(starts_with("N_"), mean, na.rm = TRUE))
+  
+  # Identify species columns
+  species_cols <- names(data)[grepl("^N_", names(data))]
+  
+  # Initialize species change dataframe
+  species_matrix <- data.frame(Species = species_cols, Change = numeric(length(species_cols)), Trend = character(length(species_cols)))
+  
+  # Calculate change between first and last recorded year
+  for (i in seq_along(species_cols)) {
+    first_year_value <- data[[species_cols[i]]][1]
+    last_year_value <- data[[species_cols[i]]][nrow(data)]  
+    
+    species_matrix$Change[i] <- last_year_value - first_year_value
+    
+    species_matrix$Trend[i] <- ifelse(species_matrix$Change[i] > 0, "Increasing", "Decreasing")
+  }
+  
+  # Get top n increasing
+  top_increasing <- species_matrix %>%
+    filter(Trend == "Increasing") %>%
+    arrange(desc(Change)) %>%
+    head(n)
+  
+  # Get top n decreasing
+  top_decreasing <- species_matrix %>%
+    filter(Trend == "Decreasing") %>%
+    arrange(Change) %>%  
+    head(n)
+  
+  return(list(Top_Increasing = top_increasing, Top_Decreasing = top_decreasing))
+}
+
+# Example usage
+Species_Greatest_Change(dwh, 2000, 5) 
+```
+
+
+
+

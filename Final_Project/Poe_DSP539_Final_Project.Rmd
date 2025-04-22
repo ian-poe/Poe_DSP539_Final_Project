@@ -15,6 +15,7 @@ library(ggplot2)
 library(sf)
 library(mapdata)
 library(gridExtra)
+library(sp)
 ```
 
 ## Baseline Data
@@ -326,7 +327,9 @@ speed_per_year_density(dwh_2, 2009, 2010)
 
 Through the inconsistency in the maps of surveyed locations, differences in the density plots of both the depth and the speed the samples where collected the results from the linear regression should be viewed very skeptically as the sample from 2010 does a poor job at representing the true region being surveyed.  
 
-## Using this dataset as a Baseline; Can We Identify at Risk Fish
+## Question 3:
+
+# Using this dataset as a Baseline; Can We Identify at Risk Fish
 
 I want to create a function where I can view how a species population (mean_number_caught) changes from a respective data. For this project I want to identify the five species which increased and decreased the most. A reference year is used as a baseline for the starting position of the species. Below the Year 2000 is used. Then we want to compare the greatest change to the mean of the data from the last year. Above we found that 2010 should not be used as a good representation of the year of data as a result we are excluding this year and using 2009 as the end point for the data. The function requires the original data, a reference year, and the number of observations for both species increasing and decreasing. 
 
@@ -380,6 +383,88 @@ print(species_increased)
 print(species_decreased)
 ```
 
+##Question 4:
+
+# Using Longline Data From after the Oil Spill Can Any Conclusions be made about the Identified Species of Intrest
+
+Using the list of Species Identified during the bottom trowing data set, the long line data set was filtered to only include the specie. From here a dataset with only 18 observations and three species where created. The sum of each of these species where shown below. The maximum number of times a species where seen was 12 however due to the use of long lines all observations showed a low catch for each observation.
 
 
+```{r}
+#Long line Data sets
+
+species_of_intrest = c(species_decreased,species_increased)
+
+station = read.csv("../Final_Project/station.csv")
+catch  = read.csv("../Final_Project/catch.csv")
+# ctd = read.csv("../Final_Project/ctd.csv")
+# ctd_proc_cast = read.csv("../Final_Project/ctd_proc_cast.csv")
+
+dwh_longline = left_join(catch,station,by = "STATIONKEY")
+
+Longline_Species_of_Intrest = dwh_longline %>% filter(TAXON %in% species_of_intrest)
+
+print(Longline_Species_of_Intrest)
+
+species_counts <- Longline_Species_of_Intrest %>%
+  count(TAXON)
+
+print(species_counts)
+
+```
+
+##Question 5:
+
+# Using Longline Data From after the Oil Spill Can Any Conclusions be made From That the spill affected Benthic Marine Biology
+
+The top 4 species that where observed the most where selected to be observed. Using the start time variable the year was identified and a separate variable was created. From hear the mean number of observations was found for each year and Taxon group. This created a dataset with three variables and 72 observations. The mean of each years species are then plotted using ggplot. From the plot all species show some decrease from 2009 (year before the oil spill) and 2010 (year of the oil spill)
+
+```{r}
+
+dwh_longline = left_join(catch,station,by = "STATIONKEY")
+
+species_counts <- dwh_longline %>%
+  count(TAXON)%>%
+  arrange(desc(n)) %>%
+  head(4)
+
+print(species_counts)
+
+longline_max_species_list = species_counts$TAXON
+
+longline_top_species_seen <- dwh_longline %>%
+  filter(TAXON %in% longline_max_species_list)
+longline_top_species_seen$year = substring(longline_top_species_seen$START_TIME,6,7)
+
+longline_top_species_seen <- longline_top_species_seen %>%
+  mutate(
+    year = ifelse(as.numeric(year) < 25, 
+                            paste0("20", year), 
+                            paste0("19", year))
+  )
+
+mean_longline_top_species <- longline_top_species_seen %>%
+    group_by(year,TAXON) %>%
+    summarise(mean_number = mean(NUMBER, na.rm = TRUE))
+
+mean_longline_top_species <- mean_longline_top_species %>%
+  mutate(year = as.numeric(year))
+
+
+ggplot(mean_longline_top_species, aes(x = year, y = mean_number)) +
+  geom_point() +  # Scatter plot
+  geom_line() +   # Add lines for trends
+  facet_wrap(~ TAXON) +  # Separate plots by species
+  labs(title = "Species Observations Over Time",
+       x = "Year",
+       y = "Mean Number Observed") +
+  theme_minimal()
+
+mean_longline_top_species <- mean_longline_top_species %>%
+  mutate(after_spill = ifelse(year >= 2010, 1, 0)) 
+
+model = lm(mean_number ~ year + TAXON + after_spill   ,data = mean_longline_top_species)
+
+summary(model)
+```
 

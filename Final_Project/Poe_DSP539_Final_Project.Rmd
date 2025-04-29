@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+#Import Library for Analysis
 library(dplyr)
 library(lubridate)
 library(tidyr)
@@ -23,9 +23,9 @@ library(sp)
 The baseline ground fish data can be found at https://catalog.data.gov/dataset/deepwater-horizon-baseline-dataset-ncei-accession-0150631 which provides data from 1987 to 2010. The data was collected from fisheries reasurch vessels which used twals where used to collect samples of the marine biology of the region. These samples where brought to the boat where there where sorted counted and recorded. The dataset contains 282 variavles with 13248 obserbations.
 
 ```{r cars}
-dwh = read.csv("../Final_Project/DWH Baseline SEAMAP Groundfish.csv")
-dim(dwh)
-#colnames(dwh)
+dwh = read.csv("../Final_Project/DWH Baseline SEAMAP Groundfish.csv")  #Import Trawling Data set
+dim(dwh)                                                               #View the dimensions of the Trawling Data set
+#colnames(dwh)                                                         # Obtain colomn names of each variable
 ```
 
 ## Question 1: 
@@ -36,58 +36,62 @@ dim(dwh)
 Start by redefining The data set by the observations of interest (Not Including Specific Species Data). Additional Variables where related which where used in order to find the mean amount of fish sampled relative to how long was spent collecting the sample. An initial Plot of the overall trends for Finfish, Crustations, Other Species, and Total Species where plotted to have a baseline understand of the trends which are being seen.
 
 ```{r}
-dwh_1 <- dwh %>% 
-  select(date_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch) %>%
-  mutate(date_gmt = mdy(date_gmt)) %>%  # Convert to Date early
-  group_by(date_gmt) %>% 
-  reframe(
-    Sum_min = sum(min_fish),
-    M_total_live = sum(tot_live) / Sum_min,
-    M_fin = sum(fin_catch) / Sum_min,
-    M_crus = sum(crus_catch) / Sum_min,
-    M_other = sum(othr_catch) / Sum_min,
-    Day = day(date_gmt),
-    Month = month(date_gmt),
-    Year = year(date_gmt)
+dwh_1 <- dwh %>%                                                                          #Using the Trawling Data
+  select(date_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch) %>%   #Select specific variables from original data set
+  mutate(date_gmt = mdy(date_gmt)) %>%                                                    #Specify Date For Format
+  group_by(date_gmt) %>%                                                                  #Group data by unique day to ensure one point for any given day
+  reframe(                                                                                #Creates New Variables
+    Sum_min = sum(min_fish),                                                              #Total Time of Trawling per Day
+    M_total_live = sum(tot_live) / Sum_min,                                               #Mean amount of total live caught per day
+    M_fin = sum(fin_catch) / Sum_min,                                                     #Mean amount of fin fish caught per day
+    M_crus = sum(crus_catch) / Sum_min,                                                   #Mean amount of crustations caught per day
+    M_other = sum(othr_catch) / Sum_min,                                                  #Mean amount of other species caught per day
+    Day = day(date_gmt),                                                                  #Day of the Month of Sample
+    Month = month(date_gmt),                                                              #Month of the Year of Sample
+    Year = year(date_gmt)                                                                 #Year of the Sample
   )
 
 
-dwh_long <- dwh_1 %>%
+#Use Pivot Longer to Combine All Mean Values into a Value column with a Type Column added for M_total_live, M_fin, M_crus, M_other
+
+dwh_long <- dwh_1 %>% 
   pivot_longer(
     cols = c(M_total_live, M_fin, M_crus, M_other), 
     names_to = "Type",
     values_to = "Value" 
   )
 
-# ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +
-#   geom_line(size = 1) +  # Draw lines for each category
-#   labs(
-#     title = "Seasonal Comparison of Catch Types",
-#     x = "Date",
-#     y = "Mean Catch",
-#     color = "Catch Type"
-#   ) +
-#   theme_minimal() +
-#   scale_color_manual(values = c("M_total_live" = "blue", 
-#                                 "M_fin" = "red", 
-#                                 "M_crus" = "green", 
-#                                 "M_other" = "purple"))
+#Graph the Trend over time on one plot with four separate lines.
 
-ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +
-  geom_line(size = 1) +  # Draw lines for each category
-  geom_smooth(method = "lm", se = FALSE, size = 1, color = "black") +
-  facet_wrap(~ Type, scales = "free_y") +  # Create a separate panel for each type
-  labs(
+ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +                            #Use ggplot function with date as the X and Value as the Y and color as type
+  geom_line(size = 1) +                                                                   #Specify a line graph and draw lines for each category
+  labs(                                                                                   #X,Y, and Title Labels for the Graph
     title = "Seasonal Comparison of Catch Types",
     x = "Date",
     y = "Mean Catch",
     color = "Catch Type"
   ) +
   theme_minimal() +
-  scale_color_manual(values = c("M_total_live" = "blue", 
+  scale_color_manual(values = c("M_total_live" = "blue",                                  #Specify Colors of the Type for the Graph
+                                "M_fin" = "red",
+                                "M_crus" = "green",
+                                "M_other" = "purple"))
+
+ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +                            #Use ggplot function with date as the X and Value as the Y and color as type
+  geom_line(size = 1) +                                                                   #Specify Line Graph
+  geom_smooth(method = "lm", se = FALSE, size = 1, color = "black") +                     #Add a smoothed trend line to the plot
+  facet_wrap(~ Type, scales = "free_y") +                                                 #Create a separate panel for each type 
+  labs(                                                                                   #X,Y, and Title Labels for the Graph
+    title = "Seasonal Comparison of Catch Types",
+    x = "Date",
+    y = "Mean Catch",
+    color = "Catch Type"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("M_total_live" = "blue",                                  #Specify Colors of each Graph
                                 "M_fin" = "red", 
                                 "M_crus" = "green", 
-                                "M_other" = "purple"))  # Custom colors for each category
+                                "M_other" = "purple"))  
 ```
 
 

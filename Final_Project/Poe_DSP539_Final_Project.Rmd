@@ -412,7 +412,7 @@ catch  = read.csv("../Final_Project/catch.csv")                                 
 
 dwh_longline = left_join(catch,station,by = "STATIONKEY")                                   #Left Join the catch dataset and the station dataset by STATIONKEY (labeled dwh_longline)
 
-Longline_Species_of_Intrest = dwh_longline %>% filter(TAXON %in% species_of_intrest)        #Filter dwh_longline by species of intrest in the Taxon Variable
+Longline_Species_of_Intrest = dwh_longline %>% filter(TAXON %in% species_of_intrest)        #Filter dwh_longline by species of interest in the Taxon Variable
 
 print(Longline_Species_of_Intrest)                                                          #Print Dataframe Created
 

@@ -336,7 +336,7 @@ speed_per_year_density(dwh_2, 2009, 2010)
 
 Through the inconsistency in the maps of surveyed locations, differences in the density plots of both the depth and the speed the samples where collected the results from the linear regression should be viewed very skeptically as the sample from 2010 does a poor job at representing the true region being surveyed.  
 
-## Question 3:
+## Question 3.1:
 
 # Using this dataset as a Baseline; Can We Identify at Risk Fish
 
@@ -392,7 +392,7 @@ print(species_increased)
 print(species_decreased)
 ```
 
-##Question 4:
+##Question 3.2:
 
 # Using Longline Data From after the Oil Spill Can Any Conclusions be made about the Identified Species of Intrest
 
@@ -422,7 +422,7 @@ print(species_counts)
 
 ```
 
-##Question 5:
+##Question 4:
 
 # Using Longline Data From after the Oil Spill Can Any Conclusions be made From That the spill affected Benthic Marine Biology
 

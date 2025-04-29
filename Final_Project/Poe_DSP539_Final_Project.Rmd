@@ -247,32 +247,32 @@ Now we want to check the data from 2009 and 2010 in order to determine if these 
 ```{r}
 #Function for location in a year
 
-location_per_year = function(data,year){
-  data2= data %>% filter(year(date_gmt) == year)
+location_per_year = function(data,year){                                                                   #Create Function "location_per_year" to plot trawl locations on a map for any given year 
+  data2= data %>% filter(year(date_gmt) == year)                                                           #Filter the inputted data set by the inputted year of interest
   
-  trawl_loc = cbind(data2$lon,data2$lat)
-  trawl_sp = SpatialPoints(trawl_loc)
-  trawl_spdf = SpatialPointsDataFrame(trawl_loc,data2)
+  trawl_loc = cbind(data2$lon,data2$lat)                                                                   #bind geographical coordinates together
+  trawl_sp = SpatialPoints(trawl_loc)                                                                      #Create Spatial Points with Coordinates
+  trawl_spdf = SpatialPointsDataFrame(trawl_loc,data2)                                                     #Update data frame to become a Spatial Point Data frame 
   coords_df <- as.data.frame(trawl_spdf)
   
-  xlim <- c(-98, -81)  # Longitude limits
-  ylim <- c(18, 31)    # Latitude limits
+  xlim <- c(-98, -81)                                                                                      #  Longitude limits for Gulf of Mexico
+  ylim <- c(18, 31)                                                                                        # Latitude limits for Gulf of Mexico
   
-  ggplot() +
-    borders("world", xlim = xlim, ylim = ylim, fill = "lightgray", colour = "black") +
-    borders("usa", colour = "black") +
-    borders("state", colour = "darkgray") +
-    geom_point(data = data2, aes(x = lon, y = lat), color = "red", size = 1.5) + # Add points
-    geom_point(aes(x = -88.37, y = 28.74), color = "black", size = 4) +
-    stat_density2d(data = data2, aes(x = lon, y = lat, fill = ..level..), geom = "polygon", alpha = 0.4) + # Density plot
+  ggplot() +                                                                                               #map is created using ggplot
+    borders("world", xlim = xlim, ylim = ylim, fill = "lightgray", colour = "black") +                     #Using a world map the area is selected by long and lat limits
+    borders("usa", colour = "black") +                                                                     #Boarder of the USA, Mexico and other Gulf Country's in Black
+    borders("state", colour = "darkgray") +                                                                #USA State Boarders in Gray
+    geom_point(data = data2, aes(x = lon, y = lat), color = "red", size = 1.5) +                           #Add points for trawl locations
+    geom_point(aes(x = -88.37, y = 28.74), color = "black", size = 4) +                                    #Add the Location of the DWH Drill Site as a Larger Point in Black for Reference
+    stat_density2d(data = data2, aes(x = lon, y = lat, fill = ..level..), geom = "polygon", alpha = 0.4) + #Add Density plot for location of trawling
     scale_fill_viridis_c() +
-    labs(title = paste("Gulf of Mexico with Density Plot ", year), x = "Longitude", y = "Latitude") +
-    coord_cartesian(xlim = xlim, ylim = ylim) +  # Restrict the view to the Gulf
+    labs(title = paste("Gulf of Mexico with Density Plot ", year), x = "Longitude", y = "Latitude") +      #X and Y Axis Labels and Title
+    coord_cartesian(xlim = xlim, ylim = ylim) +                                                            # Restrict the view to the Gulf
     theme_minimal()
 }
 
-location_per_year(dwh_2,2009)
-location_per_year(dwh_2,2010)
+location_per_year(dwh_2,2009)                                                                              #Create a map for the 2009 trawling data
+location_per_year(dwh_2,2010)                                                                              #Create a map for the 2010 trawling data
 
 ```
 

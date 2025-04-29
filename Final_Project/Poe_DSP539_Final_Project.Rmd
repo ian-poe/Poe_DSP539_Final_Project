@@ -405,23 +405,24 @@ Using the list of Species Identified during the bottom trowing data set, the lon
 ```{r}
 #Long line Data sets
 
-species_of_intrest = c(species_decreased,species_increased)
+species_of_intrest = c(species_decreased,species_increased)                                 #Create a column of species of interest by combining species_decreased and species_increased                   
 
-station = read.csv("../Final_Project/station.csv")
-catch  = read.csv("../Final_Project/catch.csv")
-# ctd = read.csv("../Final_Project/ctd.csv")
-# ctd_proc_cast = read.csv("../Final_Project/ctd_proc_cast.csv")
+station = read.csv("../Final_Project/station.csv")                                          #Import long-line station data set 
+catch  = read.csv("../Final_Project/catch.csv")                                             #Import long-line catch data set
 
-dwh_longline = left_join(catch,station,by = "STATIONKEY")
+dwh_longline = left_join(catch,station,by = "STATIONKEY")                                   #Left Join the catch dataset and the station dataset by STATIONKEY (labeled dwh_longline)
 
-Longline_Species_of_Intrest = dwh_longline %>% filter(TAXON %in% species_of_intrest)
+Longline_Species_of_Intrest = dwh_longline %>% filter(TAXON %in% species_of_intrest)        #Filter dwh_longline by species of intrest in the Taxon Variable
 
-print(Longline_Species_of_Intrest)
+print(Longline_Species_of_Intrest)                                                          #Print Dataframe Created
 
-species_counts <- Longline_Species_of_Intrest %>%
+species_counts <- Longline_Species_of_Intrest %>%                                           #Create A Count of each observation for each respective species
   count(TAXON)
 
-print(species_counts)
+print(species_counts)                                                                       #Print Count Dataframe
+
+
+#NOTE: Due to low catch for each of the identified species no analysis could be run on these species of interest
 
 ```
 

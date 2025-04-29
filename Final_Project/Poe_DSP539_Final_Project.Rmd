@@ -95,76 +95,79 @@ ggplot(dwh_long, aes(x = date_gmt, y = Value, color = Type)) +                  
 ```
 
 
-The from the overall trends we see that a relatively level trend line is found however there is a apparent sinasoildal trend. As a result to minimize this effect the data was split into two distinct data sets was compare side by side. The data from 2009 (the year before the oil spill) was compared to 2010 (the year of the oil spill). This was done breaking the date down into the day of the year to have both data points plotted side by side. This Allows for additional seasonal trends to be seen. Due to missing Data in 2010 large sections of the data is missing. The 2010 data only contains a partion of the year after the oil spill had occured. To minimize this impart a bar graph is used to visualize the change in mean finfish, mean crustation, mean other, and mean total catch. From this figure slight differences between year can be seen but no certain conclusion can be drawn. 
+The from the overall trends we see that a relatively level trend line is found however there is a apparent sinasoildal trend. As a result to minimize this effect the data was split into two distinct data sets was compare side by side. The data from 2009 (the year before the oil spill) was compared to 2010 (the year of the oil spill). This was done breaking the date down into the day of the year to have both data points plotted side by side. This Allows for additional seasonal trends to be seen. Due to missing Data in 2010 large sections of the data is missing. The 2010 data only contains a portion of the year after the oil spill had occurred. To minimize this impart a bar graph is used to visualize the change in mean finfish, mean crustation, mean other, and mean total catch. From this figure slight differences between year can be seen but no certain conclusion can be drawn. 
 
 ```{r}
-dwh_2010 <- dwh_1 %>%
-  filter(Year == 2010 ) %>%
-  rename(Date = date_gmt)
+dwh_2010 <- dwh_1 %>%                                                                                     #Creates data set for observations only 2010 (Using DWH1 Defined Above)
+  filter(Year == 2010 ) %>%                                                                               #Filter by 2010
+  rename(Date = date_gmt)                                                                                 #Rename variable "date_gmt" to "Date"
 
-dwh_2009 <- dwh_1 %>% 
-  filter(Year == 2009) %>% 
-  filter(Month == 6 | Month == 7 | Month ==8) %>%
-  rename(Date = date_gmt)
+dwh_2009 <- dwh_1 %>%                                                                                     #Creates data set for observations only 2009 (Using DWH1 Defined Above)
+  filter(Year == 2009) %>%                                                                                #Filter by year = 2010
+  filter(Month == 6 | Month == 7 | Month ==8) %>%                                                         #Filter by month = 6,7,8 to match with the partial data from 2010
+  rename(Date = date_gmt)                                                                                 #Rename variable "date_gmt" to "Date"
 
-make_series <- function(df, value_col, type_label, year_label) {
-  df %>%
-    select({{ value_col }}, Year, Month, Day) %>%
-    mutate(
-      DayOfYear = yday(make_date(Year, Month, Day)),
-      Value = {{ value_col }},
-      Type = type_label,
-      Year = year_label
+make_series <- function(df, value_col, type_label, year_label) {                                          #Creating of A function "make_series" which creates a line for Value over days in a year
+  df %>%                                                                                                  #df input variable
+    select({{ value_col }}, Year, Month, Day) %>%                                                         #Select Variables from Data set (Year,Month,Day) and value_col from input
+    mutate(                                                                                               #create new variables
+      DayOfYear = yday(make_date(Year, Month, Day)),                                                      #day of the year (Range From 1:365)
+      Value = {{ value_col }},                                                                            #Value which is the Mean Total Alive of the Designated Species
+      Type = type_label,                                                                                  #Type Label for Graph
+      Year = year_label                                                                                   #Year Label for Graph
     ) %>%
-    select(DayOfYear, Value, Type, Year)
+    select(DayOfYear, Value, Type, Year)                                                                  #Keep Specific Variables
 }
 
 # Combine all lines
-all_lines <- bind_rows(
-  make_series(dwh_2009, M_fin, "Finfish", 2009),
-  make_series(dwh_2010, M_fin, "Finfish", 2010),
+all_lines <- bind_rows(                                                                                   #Binding all rows together to plot all lines together
+  make_series(dwh_2009, M_fin, "Finfish", 2009),                                                          #"make_series" for 2009 Finfish
+  make_series(dwh_2010, M_fin, "Finfish", 2010),                                                          #"make_series" for 2010 Finfish
   
-  make_series(dwh_2009, M_crus, "Crustaceans", 2009),
-  make_series(dwh_2010, M_crus, "Crustaceans", 2010),
+  make_series(dwh_2009, M_crus, "Crustaceans", 2009),                                                     #"make_series" for 2009 Crustaceans
+  make_series(dwh_2010, M_crus, "Crustaceans", 2010),                                                     #"make_series" for 2010 Crustaceans
   
-  make_series(dwh_2009, M_other, "Other", 2009),
-  make_series(dwh_2010, M_other, "Other", 2010),
+  make_series(dwh_2009, M_other, "Other", 2009),                                                          #"make_series" for 2009 Other
+  make_series(dwh_2010, M_other, "Other", 2010),                                                          #"make_series" for 2010 Other
   
-  make_series(dwh_2009, M_total_live, "Total", 2009),
-  make_series(dwh_2010, M_total_live, "Total", 2010)
+  make_series(dwh_2009, M_total_live, "Total", 2009),                                                     #"make_series" for 2009 Total
+  make_series(dwh_2010, M_total_live, "Total", 2010)                                                      #"make_series" for 2010 Total
 )
 
+#Line graph of All 8 Lines on a single plot with Mean Catch on the Y and Day of the Year on the X
 
-library(ggplot2)
+ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year), linetype = Type)) +             #Use ggplot function with day_of_year as the X and Value as the Y and linetype as type
+  geom_line(size = 1) +                                                                                  #Use Line Graph
+  labs(                                                                                                  #Labels for X,Y,Title, and Key
+    title = "Seasonal Catch Comparison (2009 vs 2010)",
+    x = "Day of Year",
+    y = "Mean Catch",
+    color = "Year",
+    linetype = "Catch Type"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("2009" = "blue", "2010" = "red"))                                        #Change Colors of Lines By Year
 
-# ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year), linetype = Type)) +
-#   geom_line(size = 1) +
-#   labs(
-#     title = "Seasonal Catch Comparison (2009 vs 2010)",
-#     x = "Day of Year",
-#     y = "Mean Catch",
-#     color = "Year",
-#     linetype = "Catch Type"
-#   ) +
-#   theme_minimal() +
-#   scale_color_manual(values = c("2009" = "blue", "2010" = "red"))
-# 
-# 
-# ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year))) +
-#   geom_line(size = 1) +
-#   facet_wrap(~ Type, scales = "free_y") +
-#   labs(
-#     title = "Seasonal Catch Comparison by Type (2009 vs 2010)",
-#     x = "Day of Year",
-#     y = "Mean Catch",
-#     color = "Year"
-#   ) +
-#   theme_minimal()
 
-ggplot(all_lines, aes(x = DayOfYear, y = Value, fill = as.factor(Year))) +
-  geom_col(position = "dodge") +
-  facet_wrap(~ Type, scales = "free_y") +
-  labs(
+#Plot line graphs of the two years next to each other separated by Type
+
+ggplot(all_lines, aes(x = DayOfYear, y = Value, color = as.factor(Year))) +                              #Use ggplot function with day_of_year as the X and Value as the Y and color as Year
+  geom_line(size = 1) +                                                                                  #Use Line Graph
+  facet_wrap(~ Type, scales = "free_y") +                                                                #Using Facet_wrap separate data into 4 graphs (one for each type)
+  labs(                                                                                                  #Labels for X,Y,Title, and Key
+    title = "Seasonal Catch Comparison by Type (2009 vs 2010)",
+    x = "Day of Year",
+    y = "Mean Catch",
+    color = "Year"
+  ) +
+  theme_minimal()
+
+#Creates A Vertical Bar Graph to Better Visualize Missing Data
+
+ggplot(all_lines, aes(x = DayOfYear, y = Value, fill = as.factor(Year))) +                               #Use ggplot function with day_of_year as the X and Value as the Y and color as Year
+  geom_col(position = "dodge") +                                                                         #Creates a Vertical Bar Graph
+  facet_wrap(~ Type, scales = "free_y") +                                                                #Using Facet_wrap separate data into 4 graphs (one for each type)
+  labs(                                                                                                  #Labels for X,Y,Title, and Key
     title = "Seasonal Catch Comparison by Type (2009 vs 2010)",
     x = "Day of Year",
     y = "Mean Catch",

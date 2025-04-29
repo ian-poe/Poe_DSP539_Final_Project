@@ -343,51 +343,54 @@ Through the inconsistency in the maps of surveyed locations, differences in the 
 I want to create a function where I can view how a species population (mean_number_caught) changes from a respective data. For this project I want to identify the five species which increased and decreased the most. A reference year is used as a baseline for the starting position of the species. Below the Year 2000 is used. Then we want to compare the greatest change to the mean of the data from the last year. Above we found that 2010 should not be used as a good representation of the year of data as a result we are excluding this year and using 2009 as the end point for the data. The function requires the original data, a reference year, and the number of observations for both species increasing and decreasing. 
 
 ```{r}
-Species_Greatest_Change <- function(data, ref_year, n) {
+#Function to Identify Species of Interest given a data set, reference year, and number of observations wanted for increasing or decreasing
+
+Species_Greatest_Change <- function(data, ref_year, n) {                                                                                  #Create Function "Species_Greatest_Change"                                                                      
+  data <- data %>%                                                                                                                        #Using inputted data set 
+    filter(year >= ref_year & year != 2010) %>%                                                                                           #Keeps Data from Reference Year to Present (2009) excluding 2010 data
+    group_by(year) %>%                                                                                                                    #Group Data by Year
+    summarise(across(starts_with("N_"), mean, na.rm = TRUE))                                                                              #Mean Count of Each Species Caught (Columns Starting with N_) by Year
   
-  data <- data %>%
-    filter(year >= ref_year & year != 2010) %>%
-    group_by(year) %>%
-    summarise(across(starts_with("N_"), mean, na.rm = TRUE))
+  species_cols <- names(data)[grepl("^N_", names(data))]                                                                                  # Identify species columns
   
-  # Identify species columns
-  species_cols <- names(data)[grepl("^N_", names(data))]
+  species_matrix <- data.frame(Species = species_cols, Change = numeric(length(species_cols)), Trend = character(length(species_cols)))   # Initialize species change data frame
   
-  # Initialize species change dataframe
-  species_matrix <- data.frame(Species = species_cols, Change = numeric(length(species_cols)), Trend = character(length(species_cols)))
-  
-  # Calculate change between first and last recorded year
-  for (i in seq_along(species_cols)) {
-    first_year_value <- data[[species_cols[i]]][1]
-    last_year_value <- data[[species_cols[i]]][nrow(data)]  
+                                                                                                                                          # Calculate change between first and last recorded year
+  for (i in seq_along(species_cols)) {                                                                                                    # For loop ranging from each value in species_cols
+    first_year_value <- data[[species_cols[i]]][1]                                                                                        #Identify the Starting Mean Count for Each Species by Ref Year
+    last_year_value <- data[[species_cols[i]]][nrow(data)]                                                                                #Identify current (2009) Mean Count for Each Species
     
-    species_matrix$Change[i] <- last_year_value - first_year_value
+    species_matrix$Change[i] <- last_year_value - first_year_value                                                                        #Identify Difference from reference to final year 
     
-    species_matrix$Trend[i] <- ifelse(species_matrix$Change[i] > 0, "Increasing", "Decreasing")
+    species_matrix$Trend[i] <- ifelse(species_matrix$Change[i] > 0, "Increasing", "Decreasing")                                           #Identify If Species are Increasing or Decreasing
   }
   
   # Get top n increasing
-  top_increasing <- species_matrix %>%
-    filter(Trend == "Increasing") %>%
-    arrange(desc(Change)) %>%
-    head(n)
+  top_increasing <- species_matrix %>%                                                                                                    #Create a DF Length n for top increasing species
+    filter(Trend == "Increasing") %>%                                                                                                     #Filter by Increasing 
+    arrange(desc(Change)) %>%                                                                                                             #Arrange in deciding Order
+    head(n)                                                                                                                               #Only Pull top n species
   
   # Get top n decreasing
-  top_decreasing <- species_matrix %>%
-    filter(Trend == "Decreasing") %>%
-    arrange(Change) %>%  
-    head(n)
+  top_decreasing <- species_matrix %>%                                                                                                    #Create a DF Length n for top decreasing species
+    filter(Trend == "Decreasing") %>%                                                                                                     #Filter by Decreasing
+    arrange(Change) %>%                                                                                                                   #Arrange in acceding Order
+    head(n)                                                                                                                               #Only Pull top n species             
   
-  return(list(Top_Increasing = top_increasing, Top_Decreasing = top_decreasing))
+  return(list(Top_Increasing = top_increasing, Top_Decreasing = top_decreasing))                                                          #Return in list format the top n for both increasing and decreasing 
 }
 
-# Example usage
-#Species_Greatest_Change(dwh, 2000, 5) 
-species = Species_Greatest_Change(dwh, 2000, 5) 
-species_increased <- sub("^N_", "", species$Top_Increasing$Species)  
-species_increased <- gsub("_", " ", species_increased)
-species_decreased <- sub("^N_", "", species$Top_Decreasing$Species)  
-species_decreased <- gsub("_", " ", species_decreased)
+species = Species_Greatest_Change(dwh, 2000, 5)                                                                                           #Using Trawling Data and Year 2000 as Reference to obtain 5 the 5 most Increasing and Decreasing Species
+
+#Change Species Names to Format Used by Long-line Data set
+
+species_increased <- sub("^N_", "", species$Top_Increasing$Species)                                                                       #Remove the "N_" from the beginning of the species names for Top_Increasing    
+species_increased <- gsub("_", " ", species_increased)                                                                                    #Replace the "_" with a Space for Top_Increasing
+species_decreased <- sub("^N_", "", species$Top_Decreasing$Species)                                                                       #Remove the "N_" from the beginning of the species names for Top_Decreasing    
+species_decreased <- gsub("_", " ", species_decreased)                                                                                    #Replace the "_" with a Space for Top_decreasing
+
+#Print Names For Species of Intrest
+
 print(species_increased)
 print(species_decreased)
 ```

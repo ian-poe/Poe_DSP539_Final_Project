@@ -279,31 +279,31 @@ location_per_year(dwh_2,2010)                                                   
 Next the distribution of depth is checked from the data drom 2009 to 2010. A function was created which uses the initial data and two year inputes to compare the distribution of depth of the samples of the two years. In a ideal world these distributions should be the same or approximately the same. Plotting 2009 to 2010 we can see the 2009 data was sampled more from a 500-2000 ft depth while 2010 had a larger proportion from 2000 to 4000 ft.
 
 ```{r}
-depth_per_year_density = function(data, year1, year2){
+depth_per_year_density = function(data, year1, year2){                                      #Create Function "depth_per_year_density" to Overlay the distribution density of Depth for two chosen years 
 
   # Filter data for the selected years
-  data1 = data %>% filter(year(date_gmt) == year1)
-  data2 = data %>% filter(year(date_gmt) == year2)
+  data1 = data %>% filter(year(date_gmt) == year1)                                          #Data set filtered to only include year1 observations 
+  data2 = data %>% filter(year(date_gmt) == year2)                                          #Data set filtered to only include year2 observations 
   
   # Create the dataframe with correct lengths
-  df = data.frame(
-    values = as.numeric(c(data1$depth, data2$depth)),  # Ensure numeric values
-    group = factor(rep(c(year1, year2), c(length(data1$depth), length(data2$depth))))
+  df = data.frame(                                                                          #Creates a data frame for Values and Groups
+    values = as.numeric(c(data1$depth, data2$depth)),                                       # Ensure numeric values for depth values
+    group = factor(rep(c(year1, year2), c(length(data1$depth), length(data2$depth))))       # Replicates year1 for the length of year1 depth and year2 for the length of year2 depths
   )
   
   # Generate the density plot
-  ggplot(df, aes(x = values, fill = group, color = group)) +
-    geom_density(alpha = 0.5, linewidth = 1) +  # Smoothed density curves
-    scale_fill_manual(values = c("blue", "red")) +
-    scale_color_manual(values = c("blue", "red")) +  # Match density lines to fill colors
-    labs(title = paste("Comparison of Depth Distributions:", year1, "vs.", year2),
+  ggplot(df, aes(x = values, fill = group, color = group)) +                                # ggplot is used specifying variables as values (depth) on the X 
+    geom_density(alpha = 0.5, linewidth = 1) +                                              # Smoothed density curves are added for calues (depth)
+    scale_fill_manual(values = c("blue", "red")) +                                          #Fill interior of Line with Specified color (red or blue)
+    scale_color_manual(values = c("blue", "red")) +  #                                      #Match density lines to fill colors
+    labs(title = paste("Comparison of Depth Distributions:", year1, "vs.", year2),          #Title which changes with inputed years, X and Y axis lables
          x = "Depth",
          y = "Density") +
     theme_minimal()
 }
 
 # Call the function
-depth_per_year_density(dwh_2, 2009, 2010)
+depth_per_year_density(dwh_2, 2009, 2010)                                                  #Create Density Plot for Depth Comparing 2009 data to 2010
 ```
 
 A density plot of speed was then created in order to see how the distributions of speed differ from year to year. Again ideally these distributions will be similar. A function was created which uses the same imputes (data, year1, and year2). Comparing 2009 to 2010 we see the data from 2009 was more spread out with a peak of about 2.6. We see 2010 has very little variation with a large spike around 2.7 and very little spreat. 

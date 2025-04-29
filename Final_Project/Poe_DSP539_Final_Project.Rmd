@@ -293,10 +293,10 @@ depth_per_year_density = function(data, year1, year2){                          
   
   # Generate the density plot
   ggplot(df, aes(x = values, fill = group, color = group)) +                                # ggplot is used specifying variables as values (depth) on the X 
-    geom_density(alpha = 0.5, linewidth = 1) +                                              # Smoothed density curves are added for calues (depth)
+    geom_density(alpha = 0.5, linewidth = 1) +                                              # Smoothed density curves are added for values (depth)
     scale_fill_manual(values = c("blue", "red")) +                                          #Fill interior of Line with Specified color (red or blue)
     scale_color_manual(values = c("blue", "red")) +  #                                      #Match density lines to fill colors
-    labs(title = paste("Comparison of Depth Distributions:", year1, "vs.", year2),          #Title which changes with inputed years, X and Y axis lables
+    labs(title = paste("Comparison of Depth Distributions:", year1, "vs.", year2),          #Title which changes with inpuyted years, X and Y axis labels
          x = "Depth",
          y = "Density") +
     theme_minimal()
@@ -309,29 +309,29 @@ depth_per_year_density(dwh_2, 2009, 2010)                                       
 A density plot of speed was then created in order to see how the distributions of speed differ from year to year. Again ideally these distributions will be similar. A function was created which uses the same imputes (data, year1, and year2). Comparing 2009 to 2010 we see the data from 2009 was more spread out with a peak of about 2.6. We see 2010 has very little variation with a large spike around 2.7 and very little spreat. 
 
 ```{r}
-speed_per_year_density = function(data, year1, year2){
+speed_per_year_density = function(data, year1, year2){                                     #Create Function "speed_per_year_density" to Overlay the distribution density of Depth for two chosen years 
 
   # Filter data for the selected years and add a year column
-  data1 = data %>% filter(year(date_gmt) == year1) %>% mutate(year = as.factor(year1))
-  data2 = data %>% filter(year(date_gmt) == year2) %>% mutate(year = as.factor(year2))
+  data1 = data %>% filter(year(date_gmt) == year1) %>% mutate(year = as.factor(year1))     #Data set filtered to only include year1 observations 
+  data2 = data %>% filter(year(date_gmt) == year2) %>% mutate(year = as.factor(year2))     #Data set filtered to only include year2 observations 
   
   # Combine datasets
-  df = bind_rows(data1, data2)
+  df = bind_rows(data1, data2)                                                             #Bind Rows of the filtered data for the selected two years
   
   # Generate density plot for vessel speed comparison
-  ggplot(df, aes(x = vessel_spd, fill = year, color = year)) +
-    geom_density(alpha = 0.5, linewidth = 1) +  # Smoothed density curves
-    scale_fill_manual(values = c("blue", "red")) +
-    scale_color_manual(values = c("blue", "red")) +  # Match density lines to fill colors
-    xlim(2, 4) +  # Adjusted range for better viewing
-    labs(title = paste("Vessel Speed Density Comparison:", year1, "vs.", year2),
+  ggplot(df, aes(x = vessel_spd, fill = year, color = year)) +                             # ggplot is used specifying variables as vessell_spd on the X and color as year
+    geom_density(alpha = 0.5, linewidth = 1) +                                             # Smoothed density curves are added for Speed
+    scale_fill_manual(values = c("blue", "red")) +                                         #Fill interior of Line with Specified color (red or blue)
+    scale_color_manual(values = c("blue", "red")) +                                        # Match density lines to fill colors
+    xlim(2, 4) +                                                                           # Adjusted range for better viewing
+    labs(title = paste("Vessel Speed Density Comparison:", year1, "vs.", year2),           #Title which changes with inputted years, X and Y axis labels
          x = "Speed",
          y = "Density") +
     theme_minimal()
 }
 
 # Call the function
-speed_per_year_density(dwh_2, 2009, 2010)
+speed_per_year_density(dwh_2, 2009, 2010)                                                  #Create Density Plot for Speed Comparing 2009 data to 2010                                            
 ```
 
 Through the inconsistency in the maps of surveyed locations, differences in the density plots of both the depth and the speed the samples where collected the results from the linear regression should be viewed very skeptically as the sample from 2010 does a poor job at representing the true region being surveyed.  

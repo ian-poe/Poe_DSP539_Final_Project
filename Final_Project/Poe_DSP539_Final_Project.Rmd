@@ -182,24 +182,24 @@ In order to draw a more conclusive result two linear model was fitted to the dat
 
 ```{r}
 #Statistical Test
-dwh_3 <- dwh %>% 
-  select(date_gmt, time_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch, depth, TOD, GEAR_SIZE, GEAR_TYPE, MESH_SIZE, tows, vessel_spd) %>%
-  mutate(
-    date_gmt = mdy(date_gmt),  # Convert to date format
-    day = day(date_gmt),       # Extract day
-    month = month(date_gmt),   # Extract month
-    year = year(date_gmt),     # Extract year
-    is_2010 = ifelse(year == 2010, 1, 0)  # Binary flag for 2010
+dwh_3 <- dwh %>%                                                                                                                                                  #Original Data With All Relevant Variables
+  select(date_gmt, time_gmt, lat, lon, min_fish, tot_live, fin_catch, crus_catch, othr_catch, depth, TOD, GEAR_SIZE, GEAR_TYPE, MESH_SIZE, tows, vessel_spd) %>%  #Relevant Variables
+  mutate(                                                                                                                                                         #New Variables
+    date_gmt = mdy(date_gmt),                                                                                                                                     # Convert to date format
+    day = day(date_gmt),                                                                                                                                          # Extract day
+    month = month(date_gmt),                                                                                                                                      # Extract month
+    year = year(date_gmt),                                                                                                                                        # Extract year
+    is_2010 = ifelse(year == 2010, 1, 0)                                                                                                                          # Binary flag for 2010
   )
 
 #Linear Model of M_total_live 
 
 #Binary Variable of 2010 Added to Check Significance
-lm_M_Total = lm(tot_live~lat+lon+min_fish+as.numeric(depth)+TOD+MESH_SIZE+tows+vessel_spd+month+year+is_2010, data = dwh_3)
-summary(lm_M_Total)
+lm_M_Total = lm(tot_live~lat+lon+min_fish+as.numeric(depth)+TOD+MESH_SIZE+tows+vessel_spd+month+year+is_2010, data = dwh_3)                                      # Fit Linear Model With selected Variables
+summary(lm_M_Total)                                                                                                                                              # View Results of Linear Model
 
-lm_2010 = lm(tot_live ~ is_2010, data = dwh_3)
-summary(lm_2010)
+lm_2010 = lm(tot_live ~ is_2010, data = dwh_3)                                                                                                                   # Fit lm with only binary is_2010 variable
+summary(lm_2010)                                                                                                                                                 # View Results of lm with binary flag only
 
 ```
 

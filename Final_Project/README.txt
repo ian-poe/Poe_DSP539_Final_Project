@@ -13,19 +13,19 @@ Data:
     While the other belong to a long-line dataset.
 
 DWH Baseline SEAMAP Groundfish.csv:
-  This Data is a copy of the public data which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/32334
+  This Data is a copy of the public data from NOAA which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/32334
   The website provide a indepth description of the data along with the variables withing the dataset.
   This Trawling Dataset which collected data from 1987 to 2010 and will be the first used in the analysis.
 
 catch.csv:
-  This Data is a copy of the public data which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/31654
+  This Data is a copy of the public data from NOAA which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/31654
   The website provide a indepth description of the data along with the variables withing the dataset.
   This is one of multiple dataset related to the long-line datasets (to see the other datasets go to the link above)
   For this project is the first of the two long-line datasets used for the analysis
   This Long-line Catch Dataset shows the catch data from 1995 to 2013.
 
 station.csv:
-  This Data is a copy of the public data which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/31659
+  This Data is a copy of the public data from NOAA which can be found at this Link: https://www.fisheries.noaa.gov/inport/item/31659
   The website provide a indepth description of the data along with the variables withing the dataset.
   This is one of multiple dataset related to the long-line datasets (to see the other datasets go to the link above)
   For this project is the second of the two long-line datasets used for the analysis

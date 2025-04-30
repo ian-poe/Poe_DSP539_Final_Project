@@ -54,7 +54,15 @@ Poe_DSP539_Final_Project.Rmd:
     This R-markdown file contains all of the code to create the figures from the report.
     In addition to the signficant figures included in the report additional figures, dataframes, and list can be found.
     The r-mardown is broken down by question and commeted to allow easy understanding of what is occuring.
-    Before running the code ensure all of the library specified at the top of the code is downloaded to your r-studio.
+    Before running the code, ensure all of the library specified at the top of the code is downloaded to your r-studio.
+            library(dplyr)
+            library(lubridate)
+            library(tidyr)
+            library(ggplot2)
+            library(sf)
+            library(mapdata)
+            library(gridExtra)
+            library(sp)
     Lines 26, 410, and 411 are where the datasets located above are imported into the data. 
     Depending on the saved location for these data sets the path may have to be changed. 
     

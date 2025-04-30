@@ -434,50 +434,50 @@ The top 4 species that where observed the most where selected to be observed. Us
 
 ```{r}
 
-dwh_longline = left_join(catch,station,by = "STATIONKEY")
+dwh_longline = left_join(catch,station,by = "STATIONKEY")                                   #Left Join the catch data set and the station data set by STATIONKEY (labeled dwh_longline)
 
-species_counts <- dwh_longline %>%
-  count(TAXON)%>%
-  arrange(desc(n)) %>%
-  head(4)
+species_counts <- dwh_longline %>%                                                          #Identify the top 4 species observed in the long-line data set
+  count(TAXON)%>%                                                                           #create a count variable for TAXON labeled (n)
+  arrange(desc(n)) %>%                                                                      #Arrange in Descending Order
+  head(4)                                                                                   #Take only the top 4 species
 
-print(species_counts)
+print(species_counts)                                                                       #print species_counts data frame
 
-longline_max_species_list = species_counts$TAXON
+longline_max_species_list = species_counts$TAXON                                            #Create a variable for the species names
 
-longline_top_species_seen <- dwh_longline %>%
-  filter(TAXON %in% longline_max_species_list)
-longline_top_species_seen$year = substring(longline_top_species_seen$START_TIME,6,7)
+longline_top_species_seen <- dwh_longline %>%                                               #Using full long-line data (catch merged with station)
+filter(TAXON %in% longline_max_species_list)                                                #Filter data by top species seen in the TAXON variable
+longline_top_species_seen$year = substring(longline_top_species_seen$START_TIME,6,7)        #Retrieve the year component from the START_TIME string (position 6 and 7)
 
-longline_top_species_seen <- longline_top_species_seen %>%
+longline_top_species_seen <- longline_top_species_seen %>%                                  #create a new dataframe
   mutate(
-    year = ifelse(as.numeric(year) < 25, 
-                            paste0("20", year), 
-                            paste0("19", year))
+    year = ifelse(as.numeric(year) < 25,                                                    #Using a if else if 
+                            paste0("20", year),                                             #year was less than 25 a 20 was placed in front of the value
+                            paste0("19", year))                                             #year was greater or equal than 25 a 19 was placed in front of the value
   )
 
-mean_longline_top_species <- longline_top_species_seen %>%
-    group_by(year,TAXON) %>%
-    summarise(mean_number = mean(NUMBER, na.rm = TRUE))
+mean_longline_top_species <- longline_top_species_seen %>%                                  #New dataframe was created
+    group_by(year,TAXON) %>%                                                                #Grouping the Previous One by Year
+    summarise(mean_number = mean(NUMBER, na.rm = TRUE))                                     #Mean number of species caught per year was then found for each species and for each year
 
-mean_longline_top_species <- mean_longline_top_species %>%
-  mutate(year = as.numeric(year))
+mean_longline_top_species <- mean_longline_top_species %>%                                 
+  mutate(year = as.numeric(year))                                                           #Ensure Year is Read as a Numeric Value
 
 
-ggplot(mean_longline_top_species, aes(x = year, y = mean_number)) +
-  geom_point() +  # Scatter plot
-  geom_line() +   # Add lines for trends
-  facet_wrap(~ TAXON) +  # Separate plots by species
-  labs(title = "Species Observations Over Time",
+ggplot(mean_longline_top_species, aes(x = year, y = mean_number)) +                         #ggplot to plot mean caught on y against year in x
+  geom_point() +                                                                            # Creates Scatter plot
+  geom_line() +                                                                             # Add lines to the points
+  facet_wrap(~ TAXON) +                                                                     # Separate plots by species (TAXON)
+  labs(title = "Species Observations Over Time",                                            #Creates labels for X and Y Axis and Title
        x = "Year",
        y = "Mean Number Observed") +
   theme_minimal()
 
-mean_longline_top_species <- mean_longline_top_species %>%
-  mutate(after_spill = ifelse(year >= 2010, 1, 0)) 
+mean_longline_top_species <- mean_longline_top_species %>% 
+  mutate(after_spill = ifelse(year >= 2010, 1, 0))                                         #Adds a binary flag for before or after or equal 2010
 
-model = lm(mean_number ~ year + TAXON + after_spill   ,data = mean_longline_top_species)
+model = lm(mean_number ~ year + TAXON + after_spill   ,data = mean_longline_top_species)   #Fits a linear regression for mean number by year,Taxon, and after_spill
 
-summary(model)
+summary(model)                                                                             #Shows results of linear model
 ```
 
